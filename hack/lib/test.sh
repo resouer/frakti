@@ -23,7 +23,7 @@ frakti::test::e2e() {
 
   frakti::log::progress "run frakti e2e test case\n"
   export PATH=$(dirname "${e2e_test}"):"${PATH}"
-  sudo "${ginkgo}" "${e2e_test}"
+  sudo `which ginkgo` "${e2e_test}"
 }
 
 frakti::test::find_dirs() {
