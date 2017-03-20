@@ -30,6 +30,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/frakti/pkg/alternativeruntime"
 	"k8s.io/frakti/pkg/runtime"
+	"k8s.io/frakti/pkg/util"
 	kubeapi "k8s.io/kubernetes/pkg/kubelet/api/v1alpha1/runtime"
 	"k8s.io/kubernetes/pkg/kubelet/server/streaming"
 	utilexec "k8s.io/kubernetes/pkg/util/exec"
@@ -37,12 +38,6 @@ import (
 
 const (
 	runtimeAPIVersion = "0.1.0"
-
-	// TODO(resouer) move this to well-known labels on k8s upstream?
-	// The annotation key specifying this pod will run by OS container runtime.
-	OSContainerAnnotationKey = "runtime.frakti.alpha.kubernetes.io/OSContainer"
-	// The annotation value specifying this pod will run by OS container runtime.
-	OSContainerAnnotationTrue = "true"
 )
 
 // FraktiManager serves the kubelet runtime gRPC api which will be
@@ -570,7 +565,7 @@ func (s *FraktiManager) RemoveImage(ctx context.Context, req *kubeapi.RemoveImag
 func isOSContainerRuntimeRequired(podConfig *kubeapi.PodSandboxConfig) bool {
 	// user require it
 	if annotations := podConfig.GetAnnotations(); annotations != nil {
-		if useOSContainer := annotations[OSContainerAnnotationKey]; useOSContainer == OSContainerAnnotationTrue {
+		if useOSContainer := annotations[util.OSContainerAnnotationKey]; useOSContainer == util.OSContainerAnnotationTrue {
 			return true
 		}
 	}

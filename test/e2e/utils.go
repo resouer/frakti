@@ -96,6 +96,18 @@ func createPodSandboxForContainer(c internalapi.RuntimeService) (string, *runtim
 	return createPodSandboxOrFail(c, podConfig), podConfig
 }
 
+// createAlternativePodSandboxForContainer creates a alternative runtime PodSandbox for creating containers.
+func createAlternativePodSandboxForContainer(c internalapi.RuntimeService) (string, *runtimeapi.PodSandboxConfig) {
+	By("create a alternative runtime odSandbox for creating containers")
+	podName := "PodSandbox-for-create-container-" + framework.NewUUID()
+	podConfig := &runtimeapi.PodSandboxConfig{
+		Metadata: buildPodSandboxMetadata(podName),
+	}
+	podConfig.Annotations = map[string]string{"runtime.frakti.alpha.kubernetes.io/OSContainer": "true"}
+	// TODO(resouer) we should also test host ns and privileged pod
+	return createPodSandboxOrFail(c, podConfig), podConfig
+}
+
 //
 func createPodSandboxWithLogDirectory(c internalapi.RuntimeService) (string, *runtimeapi.PodSandboxConfig) {
 	By("create a PodSandbox with log directory")

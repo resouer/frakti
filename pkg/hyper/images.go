@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/golang/glog"
+	"k8s.io/frakti/util"
 	kubeapi "k8s.io/kubernetes/pkg/kubelet/api/v1alpha1/runtime"
 )
 
@@ -40,7 +41,7 @@ func (h *Runtime) ListImages(filter *kubeapi.ImageFilter) ([]*kubeapi.Image, err
 				filter = filter + ":latest"
 			}
 
-			if !inList(filter, img.RepoTags) && !inList(filter, img.RepoDigests) {
+			if !util.inList(filter, img.RepoTags) && !util.inList(filter, img.RepoDigests) {
 				continue
 			}
 		}

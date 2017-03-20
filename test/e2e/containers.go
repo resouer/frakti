@@ -168,3 +168,72 @@ var _ = framework.KubeDescribe("Test Container", func() {
 		})
 	})
 })
+
+var _ = framework.KubeDescribe("Test Alternative Runtime Container", func() {
+	f := framework.NewDefaultFramework("frakti-alternative-container-test")
+
+	var c internalapi.RuntimeService
+	var ic internalapi.ImageManagerService
+
+	BeforeEach(func() {
+		c = f.Client.FraktiRuntimeService
+		ic = f.Client.FraktiImageService
+	})
+
+	Context("test basic operations on container", func() {
+		var podID string
+		var podConfig *runtimeapi.PodSandboxConfig
+
+		BeforeEach(func() {
+			podID, podConfig = createAlternativePodSandboxForContainer(c)
+			pullImageList(ic, []string{defaultContainerImage})
+		})
+
+		AfterEach(func() {
+			By("stop PodSandbox")
+			c.StopPodSandbox(podID)
+			By("delete PodSandbox")
+			c.RemovePodSandbox(podID)
+			By("remove default image")
+			removeImageList(ic, []string{defaultContainerImage})
+		})
+
+		It("test create container", func() {
+			By("test create container")
+			containerID := testCreateContainer(c, podID, podConfig)
+
+			By("test list container")
+			containers := listContainerForIDOrFail(c, containerID)
+			Expect(containerFound(containers, containerID)).To(BeTrue(), "container should be created")
+		})
+
+		It("test start container", func() {
+			By("create container")
+			containerID := createContainerOrFail(c, "container-for-create-test-", podID, podConfig)
+
+			By("test start container")
+			testStartContainer(c, containerID)
+		})
+
+		It("test stop container", func() {
+			By("create container")
+			containerID := createContainerOrFail(c, "container-for-create-test-", podID, podConfig)
+
+			By("start container")
+			startContainerOrFail(c, containerID)
+
+			By("test stop container")
+			testStopContainer(c, containerID)
+		})
+
+		It("test remove container", func() {
+			By("create container")
+			containerID := createContainerOrFail(c, "container-for-create-test-", podID, podConfig)
+
+			By("test remove container")
+			removeContainerOrFail(c, containerID)
+			containers := listContainerForIDOrFail(c, containerID)
+			Expect(containerFound(containers, containerID)).To(BeFalse(), "container should be removed")
+		})
+	})
+})

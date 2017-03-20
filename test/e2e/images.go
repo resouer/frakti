@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"k8s.io/frakti/test/e2e/framework"
+	"k8s.io/frakti/util"
 	internalapi "k8s.io/kubernetes/pkg/kubelet/api"
 	kubeapi "k8s.io/kubernetes/pkg/kubelet/api/v1alpha1/runtime"
 
@@ -84,7 +85,7 @@ func filterImageFromList(images []*kubeapi.Image, filter *kubeapi.ImageFilter) [
 	for _, img := range images {
 		if filter != nil && filter.GetImage() != nil && filter.GetImage().Image != "" {
 			image := filter.GetImage().Image
-			if !inList(image, img.RepoTags) && !inList(image, img.RepoDigests) {
+			if !util.inList(image, img.RepoTags) && !util.inList(image, img.RepoDigests) {
 				continue
 			}
 		}
@@ -92,17 +93,6 @@ func filterImageFromList(images []*kubeapi.Image, filter *kubeapi.ImageFilter) [
 		results = append(results, img)
 	}
 	return results
-}
-
-// inList checks if a string is in a list
-func inList(in string, list []string) bool {
-	for _, str := range list {
-		if in == str {
-			return true
-		}
-	}
-
-	return false
 }
 
 // TODO: need some test case with private image

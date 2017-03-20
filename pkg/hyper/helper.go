@@ -109,17 +109,6 @@ func parseRepositoryTag(repos string) (string, string) {
 	return repos, "latest"
 }
 
-// inList checks if a string is in a list
-func inList(in string, list []string) bool {
-	for _, str := range list {
-		if in == str {
-			return true
-		}
-	}
-
-	return false
-}
-
 // buildKubeGenericName creates a name which can be reversed to identify container/sandbox name.
 // This function returns the unique name.
 func buildKubeGenericName(sandboxConfig *kubeapi.PodSandboxConfig, containerName string) string {
