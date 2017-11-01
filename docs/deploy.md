@@ -210,7 +210,10 @@ yum install -y kubelet kubeadm kubectl
 Configure kubelet with frakti runtime:
 
 ```sh
-sed -i '2 i\Environment="KUBELET_EXTRA_ARGS=--container-runtime=remote --container-runtime-endpoint=/var/run/frakti.sock --feature-gates=AllAlpha=true"' /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+cat > /etc/systemd/system/kubelet.service.d/20-cri.conf <<EOF
+[Service]
+Environment="KUBELET_EXTRA_ARGS=--container-runtime=remote --container-runtime-endpoint=/var/run/frakti.sock --feature-gates=AllAlpha=true"
+EOF
 systemctl daemon-reload
 ```
 
@@ -218,6 +221,9 @@ systemctl daemon-reload
 
 ```sh
 kubeadm init --pod-network-cidr 10.244.0.0/16 --kubernetes-version stable
+
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 ```
 
 Configure CNI network plugin (skip this step if you already configured simple bridge plugin)
@@ -228,17 +234,16 @@ kubectl create -f https://github.com/coreos/flannel/raw/master/Documentation/kub
 
 For other plugins, please check [networking doc](./networking.md).
 
-We prefer to use Linux container runtime to handle kube-dns since the default resource limit of hypervisor runtime is not enough.
-So let's annotate the Pod and let Kubernetes do the rolling update for you.
+The default resource limit of hypervisor runtime is not enough. So let's patch the Pod and let Kubernetes do the rolling update for you.
 
 ```sh
-kubectl -n kube-system patch deployment kube-dns -p '{"spec":{"template":{"metadata":{"annotations":{"runtime.frakti.alpha.kubernetes.io/OSContainer": "true"}}}}}'
+kubectl -n kube-system patch deployment kube-dns -p '{"spec":{"template":{"spec":{"containers":[{"name":"kubedns","resources":{"limits":{"memory":"256Mi"}}},{"name":"dnsmasq","resources":{"limits":{"memory":"128Mi"}}},{"name":"sidecar","resources":{"limits":{"memory":"64Mi"}}}]}}}}'
+
 ```
 
 Optional: enable schedule pods on the master
 
 ```sh
-export KUBECONFIG=/etc/kubernetes/admin.conf
 kubectl taint nodes --all node-role.kubernetes.io/master:NoSchedule-
 ```
 
